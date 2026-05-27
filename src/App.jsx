@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { FaArrowLeft, FaDownload, FaQuestion } from 'react-icons/fa6'
 import CanvasEditor from './components/CanvasEditor'
 import ImageResults from './components/ImageResults'
 import SearchBar from './components/SearchBar'
@@ -136,7 +137,9 @@ function App() {
               type="button"
               onClick={() => setIsInstructionsOpen(true)}
             >
-              <span aria-hidden="true">?</span>
+              <span aria-hidden="true" className="header-button-icon">
+                <FaQuestion />
+              </span>
               Canvas Instruction
             </button>
             <button
@@ -145,7 +148,9 @@ function App() {
               type="button"
               onClick={goToSearchPage}
             >
-              <span aria-hidden="true">&lt;</span>
+              <span aria-hidden="true" className="header-button-icon">
+                <FaArrowLeft />
+              </span>
               Back to Search
             </button>
             <button
@@ -154,7 +159,9 @@ function App() {
               type="button"
               onClick={downloadImage}
             >
-              <span aria-hidden="true">D</span>
+              <span aria-hidden="true" className="header-button-icon">
+                <FaDownload />
+              </span>
               Download
             </button>
           </div>
@@ -209,43 +216,43 @@ function App() {
                   <article>
                     <h3>Canvas Basics</h3>
                     <p>
-                      Select any image, text, or shape on the canvas to drag, resize, rotate, or
-                      edit it. Select multiple layers together to move or resize them as a group.
+                      Click any image, text, or shape to select it. Drag to move it, use the corner
+                      handles to resize it, and use the rotate handle to turn it.
                     </p>
                   </article>
                   <article>
                     <h3>Text Tools</h3>
                     <p>
-                      Use the text input to update selected text, the Text color picker to change
-                      text color, Size for font size, and Text to add a new editable caption.
+                      Click Text to add a caption. Select a text layer, then use Text color and Size
+                      to change its color and font size.
                     </p>
                   </article>
                   <article>
                     <h3>Shape Tools</h3>
                     <p>
-                      Add Rectangle, Circle, Triangle, or Polygon. Background controls apply solid
-                      or gradient fills to selected shapes and to new shapes.
+                      Use Rectangle, Circle, Triangle, or Polygon to add shapes. Background changes
+                      the fill color or gradient for the selected shape and for new shapes.
                     </p>
                   </article>
                   <article>
                     <h3>Image Frames</h3>
                     <p>
-                      Drag an image into the center of a shape to fit it inside that shape. Use
-                      Release when a framed image or its shape is selected to separate them again.
+                      Drag an image over a shape to place the image inside it. Select the framed
+                      image or shape, then click Release to separate them again.
                     </p>
                   </article>
                   <article>
                     <h3>Layer Order</h3>
                     <p>
-                      B sends selected layers to the back, - moves them one step backward, + moves
-                      them one step forward, and F brings them to the front.
+                      Select a layer first. B moves it behind everything, - moves it back one step, +
+                      moves it forward one step, and F brings it to the front.
                     </p>
                   </article>
                   <article>
                     <h3>Finish</h3>
                     <p>
-                      Delete removes the selected layer or group. Download exports your finished
-                      canvas as a PNG file.
+                      Select a layer and click Delete to remove it. Click Download when your design
+                      is ready to save it as a PNG file.
                     </p>
                   </article>
                 </div>
