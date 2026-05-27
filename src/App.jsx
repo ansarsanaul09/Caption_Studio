@@ -25,6 +25,10 @@ function App() {
     deleteActiveObject,
     downloadImage,
     loadImageToCanvas,
+    releaseActiveFrame,
+    updateActiveObjectColor,
+    updateActiveTextFontSize,
+    updateActiveTextValue,
   } = useFabricCanvas({
     captionText,
     color,
@@ -74,6 +78,21 @@ function App() {
       setIsSearchInvalid(false)
       setStatus('')
     }
+  }
+
+  function handleCaptionTextChange(value) {
+    setCaptionText(value)
+    updateActiveTextValue(value)
+  }
+
+  function handleColorChange(value) {
+    setColor(value)
+    updateActiveObjectColor(value)
+  }
+
+  function handleFontSizeChange(value) {
+    setFontSize(value)
+    updateActiveTextFontSize(value)
   }
 
   async function openEditor(image) {
@@ -135,10 +154,11 @@ function App() {
               fontSize={fontSize}
               onAddShape={addShape}
               onAddText={addText}
-              onCaptionTextChange={setCaptionText}
-              onColorChange={setColor}
+              onCaptionTextChange={handleCaptionTextChange}
+              onColorChange={handleColorChange}
               onDeleteActiveObject={deleteActiveObject}
-              onFontSizeChange={setFontSize}
+              onFontSizeChange={handleFontSizeChange}
+              onReleaseActiveFrame={releaseActiveFrame}
             />
           </section>
         </>

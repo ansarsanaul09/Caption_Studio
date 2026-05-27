@@ -11,6 +11,7 @@ function CanvasEditor({
   onColorChange,
   onDeleteActiveObject,
   onFontSizeChange,
+  onReleaseActiveFrame,
 }) {
   return (
     <section className="editor-panel">
@@ -24,6 +25,7 @@ function CanvasEditor({
         onColorChange={onColorChange}
         onDeleteActiveObject={onDeleteActiveObject}
         onFontSizeChange={onFontSizeChange}
+        onReleaseActiveFrame={onReleaseActiveFrame}
       />
 
       <div className="canvas-wrap">

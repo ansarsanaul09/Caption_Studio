@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { triggerUnsplashDownload } from '../services/unsplashApi'
-import { enforceLayerOrder, extractLayers } from '../utils/canvasLayers'
+import { extractLayers } from '../utils/canvasLayers'
 import { createCaption, createShape } from '../utils/canvasObjects'
 
 const CANVAS_WIDTH = 840
 const CANVAS_HEIGHT = 560
 const CANVAS_BACKGROUND = '#f8fafc'
+const TRANSPARENT_FRAME_FILL = 'rgba(0, 0, 0, 0)'
+let objectIdCounter = 0
 
 function useFabricCanvas({ captionText, color, fontSize, onSelectedImageChange, onStatusChange }) {
   const fabricCanvasRef = useRef(null)
@@ -48,9 +50,12 @@ function useFabricCanvas({ captionText, color, fontSize, onSelectedImageChange, 
           )
 
           fabricImage.set({
+            canvasObjectId: createCanvasObjectId(),
             kind: 'image',
-            selectable: false,
-            evented: false,
+            selectable: true,
+            evented: true,
+            hasControls: true,
+            hasBorders: true,
             originX: 'center',
             originY: 'center',
             left: CANVAS_WIDTH / 2,
@@ -62,6 +67,7 @@ function useFabricCanvas({ captionText, color, fontSize, onSelectedImageChange, 
 
           canvas.add(fabricImage)
           fabricImage.sendToBack()
+          canvas.setActiveObject(fabricImage)
           canvas.renderAll()
           setLayers(extractLayers(canvas))
           onStatusChange('')
@@ -93,11 +99,77 @@ function useFabricCanvas({ captionText, color, fontSize, onSelectedImageChange, 
     fabricCanvasRef.current = canvas
 
     const syncLayers = () => setLayers(extractLayers(canvas))
+    const bringActiveObjectForward = () => {
+      const activeObject = canvas.getActiveObject()
+
+      if (!activeObject) {
+        syncLayers()
+        return
+      }
+
+      activeObject.bringToFront()
+      canvas.requestRenderAll()
+      syncLayers()
+    }
+    const fitActiveImageIntoShape = () => {
+      const activeObject = canvas.getActiveObject()
+
+      if (activeObject?.type === 'activeSelection') {
+        syncFrameImagesForObjects(canvas, activeObject.getObjects(), syncLayers)
+        return
+      }
+
+      if (activeObject?.kind === 'shape') {
+        syncImageForShape(canvas, activeObject, syncLayers)
+        return
+      }
+
+      if (activeObject?.kind !== 'image') {
+        syncLayers()
+        return
+      }
+
+      const targetShape = findBestOverlappingShape(canvas, activeObject)
+
+      if (!targetShape) {
+        releaseImageFromShape(canvas, activeObject)
+        canvas.requestRenderAll()
+        syncLayers()
+        return
+      }
+
+      fitImageIntoShape(activeObject, targetShape, canvas, syncLayers)
+    }
+    const syncLinkedFrameOnTransform = (event) => {
+      const targetObject = event.target
+
+      if (!targetObject) {
+        syncLayers()
+        return
+      }
+
+      if (targetObject.type === 'activeSelection') {
+        syncFrameImagesForObjects(canvas, targetObject.getObjects(), syncLayers)
+        return
+      }
+
+      if (targetObject.kind === 'shape') {
+        syncImageForShape(canvas, targetObject, syncLayers)
+        return
+      }
+
+      syncLayers()
+    }
+
     canvas.on('object:added', syncLayers)
-    canvas.on('object:modified', syncLayers)
+    canvas.on('object:modified', syncLinkedFrameOnTransform)
     canvas.on('object:removed', syncLayers)
-    canvas.on('selection:created', syncLayers)
-    canvas.on('selection:updated', syncLayers)
+    canvas.on('object:moving', bringActiveObjectForward)
+    canvas.on('object:scaling', syncLinkedFrameOnTransform)
+    canvas.on('object:rotating', syncLinkedFrameOnTransform)
+    canvas.on('mouse:up', fitActiveImageIntoShape)
+    canvas.on('selection:created', bringActiveObjectForward)
+    canvas.on('selection:updated', bringActiveObjectForward)
     syncLayers()
 
     if (pendingImageRef.current) {
@@ -118,7 +190,6 @@ function useFabricCanvas({ captionText, color, fontSize, onSelectedImageChange, 
     const textbox = createCaption({ fabric: window.fabric, text: captionText, color, fontSize })
 
     canvas.add(textbox)
-    enforceLayerOrder(canvas)
     canvas.setActiveObject(textbox)
     canvas.renderAll()
     setLayers(extractLayers(canvas))
@@ -130,8 +201,8 @@ function useFabricCanvas({ captionText, color, fontSize, onSelectedImageChange, 
 
     try {
       const shape = createShape({ fabric: window.fabric, type, color })
+      shape.set({ canvasObjectId: createCanvasObjectId() })
       canvas.add(shape)
-      enforceLayerOrder(canvas)
       canvas.setActiveObject(shape)
       canvas.renderAll()
       setLayers(extractLayers(canvas))
@@ -140,14 +211,93 @@ function useFabricCanvas({ captionText, color, fontSize, onSelectedImageChange, 
     }
   }
 
+  function updateActiveObjectColor(nextColor) {
+    const canvas = fabricCanvasRef.current
+    const activeObjects = getActiveEditableObjects(canvas)
+    if (!canvas || !activeObjects.length) return
+
+    activeObjects.forEach((object) => {
+      if (object.kind === 'text') {
+        object.set({ fill: nextColor })
+      }
+
+      if (object.kind === 'shape') {
+        const nextFill = `${nextColor}55`
+        object.set({
+          fill: object.frameImageId ? TRANSPARENT_FRAME_FILL : nextFill,
+          frameOriginalFill: object.frameImageId ? nextFill : object.frameOriginalFill,
+          stroke: nextColor,
+        })
+      }
+    })
+
+    canvas.requestRenderAll()
+    setLayers(extractLayers(canvas))
+  }
+
+  function updateActiveTextFontSize(nextFontSize) {
+    const canvas = fabricCanvasRef.current
+    const activeObjects = getActiveEditableObjects(canvas)
+    if (!canvas || !activeObjects.length) return
+
+    activeObjects
+      .filter((object) => object.kind === 'text')
+      .forEach((object) => {
+        object.set({ fontSize: nextFontSize })
+        object.setCoords()
+      })
+
+    canvas.requestRenderAll()
+    setLayers(extractLayers(canvas))
+  }
+
+  function updateActiveTextValue(nextText) {
+    const canvas = fabricCanvasRef.current
+    const activeObjects = getActiveEditableObjects(canvas)
+    if (!canvas || !activeObjects.length) return
+
+    activeObjects
+      .filter((object) => object.kind === 'text')
+      .forEach((object) => {
+        object.set({ text: nextText })
+        object.setCoords()
+      })
+
+    canvas.requestRenderAll()
+    setLayers(extractLayers(canvas))
+  }
+
   function deleteActiveObject() {
     const canvas = fabricCanvasRef.current
     const active = canvas?.getActiveObject()
-    if (!canvas || !active || active.kind === 'image') return
+    if (!canvas || !active) return
 
-    canvas.remove(active)
+    getActiveEditableObjects(canvas).forEach((object) => {
+      clearFrameLinkBeforeDelete(canvas, object)
+      canvas.remove(object)
+    })
+
     canvas.discardActiveObject()
     canvas.renderAll()
+    setLayers(extractLayers(canvas))
+  }
+
+  function releaseActiveFrame() {
+    const canvas = fabricCanvasRef.current
+    const activeObjects = getActiveEditableObjects(canvas)
+    if (!canvas || !activeObjects.length) return
+
+    activeObjects.forEach((object) => {
+      if (object.kind === 'image') {
+        releaseImageFromShape(canvas, object)
+      }
+
+      if (object.kind === 'shape') {
+        releaseImageFromFrameShape(canvas, object)
+      }
+    })
+
+    canvas.requestRenderAll()
     setLayers(extractLayers(canvas))
   }
 
@@ -177,9 +327,221 @@ function useFabricCanvas({ captionText, color, fontSize, onSelectedImageChange, 
     loadImageToCanvas,
     addText,
     addShape,
+    updateActiveObjectColor,
+    updateActiveTextFontSize,
+    updateActiveTextValue,
     deleteActiveObject,
+    releaseActiveFrame,
     downloadImage,
   }
+}
+
+function createCanvasObjectId() {
+  objectIdCounter += 1
+  return `canvas-object-${objectIdCounter}`
+}
+
+function getActiveEditableObjects(canvas) {
+  if (!canvas) {
+    return []
+  }
+
+  const activeObject = canvas.getActiveObject()
+
+  if (!activeObject) {
+    return []
+  }
+
+  if (activeObject.type === 'activeSelection') {
+    return activeObject.getObjects()
+  }
+
+  return [activeObject]
+}
+
+function findBestOverlappingShape(canvas, imageObject) {
+  const imageBounds = imageObject.getBoundingRect()
+
+  return canvas
+    .getObjects()
+    .filter((object) => object.kind === 'shape')
+    .map((shape) => ({
+      shape,
+      overlapArea: getOverlapArea(imageBounds, shape.getBoundingRect()),
+    }))
+    .filter((item) => item.overlapArea > 0)
+    .sort((first, second) => second.overlapArea - first.overlapArea)[0]?.shape
+}
+
+function fitImageIntoShape(imageObject, shapeObject, canvas, onComplete) {
+  ensureCanvasObjectId(imageObject)
+  ensureCanvasObjectId(shapeObject)
+  preserveShapeFill(shapeObject)
+
+  const shapeBounds = shapeObject.getBoundingRect()
+  const imageWidth = imageObject.width || 1
+  const imageHeight = imageObject.height || 1
+  const coverScale = Math.max(shapeBounds.width / imageWidth, shapeBounds.height / imageHeight)
+
+  imageObject.set({
+    originX: 'center',
+    originY: 'center',
+    left: shapeBounds.left + shapeBounds.width / 2,
+    top: shapeBounds.top + shapeBounds.height / 2,
+    scaleX: coverScale,
+    scaleY: coverScale,
+  })
+
+  imageObject.set({
+    frameShapeId: shapeObject.canvasObjectId,
+  })
+  shapeObject.set({
+    frameImageId: imageObject.canvasObjectId,
+    fill: TRANSPARENT_FRAME_FILL,
+  })
+
+  shapeObject.clone((clipPath) => {
+    clipPath.set({
+      absolutePositioned: true,
+      evented: false,
+      fill: '#000000',
+      selectable: false,
+      stroke: null,
+    })
+
+    imageObject.set({ clipPath })
+    shapeObject.bringToFront()
+    imageObject.setCoords()
+    shapeObject.setCoords()
+    canvas.requestRenderAll()
+    onComplete()
+  })
+}
+
+function syncFrameImagesForObjects(canvas, objects, onComplete) {
+  const shapes = objects.filter((object) => object.kind === 'shape')
+
+  if (!shapes.length) {
+    onComplete()
+    return
+  }
+
+  shapes.forEach((shape) => syncImageForShape(canvas, shape, onComplete))
+}
+
+function syncImageForShape(canvas, shapeObject, onComplete) {
+  if (!shapeObject.frameImageId) {
+    onComplete()
+    return
+  }
+
+  const linkedImage = canvas
+    .getObjects()
+    .find((object) => object.canvasObjectId === shapeObject.frameImageId)
+
+  if (!linkedImage) {
+    shapeObject.set({ frameImageId: null })
+    onComplete()
+    return
+  }
+
+  fitImageIntoShape(linkedImage, shapeObject, canvas, onComplete)
+}
+
+function releaseImageFromShape(canvas, imageObject) {
+  if (imageObject.frameShapeId) {
+    const linkedShape = canvas
+      .getObjects()
+      .find((object) => object.canvasObjectId === imageObject.frameShapeId)
+
+    restoreShapeFill(linkedShape)
+    linkedShape?.set({ frameImageId: null })
+  }
+
+  imageObject.set({
+    clipPath: null,
+    frameShapeId: null,
+  })
+}
+
+function releaseImageFromFrameShape(canvas, shapeObject) {
+  if (!shapeObject.frameImageId) {
+    return
+  }
+
+  const linkedImage = canvas
+    .getObjects()
+    .find((object) => object.canvasObjectId === shapeObject.frameImageId)
+
+  linkedImage?.set({
+    clipPath: null,
+    frameShapeId: null,
+  })
+
+  restoreShapeFill(shapeObject)
+  shapeObject.set({ frameImageId: null })
+}
+
+function clearFrameLinkBeforeDelete(canvas, object) {
+  if (object.kind === 'image') {
+    releaseImageFromShape(canvas, object)
+    return
+  }
+
+  if (object.kind !== 'shape' || !object.frameImageId) {
+    return
+  }
+
+  const linkedImage = canvas
+    .getObjects()
+    .find((canvasObject) => canvasObject.canvasObjectId === object.frameImageId)
+
+  linkedImage?.set({
+    clipPath: null,
+    frameShapeId: null,
+  })
+}
+
+function ensureCanvasObjectId(object) {
+  if (!object.canvasObjectId) {
+    object.set({ canvasObjectId: createCanvasObjectId() })
+  }
+}
+
+function preserveShapeFill(shapeObject) {
+  if (!shapeObject.frameOriginalFill) {
+    shapeObject.set({ frameOriginalFill: shapeObject.fill })
+  }
+}
+
+function restoreShapeFill(shapeObject) {
+  if (!shapeObject) {
+    return
+  }
+
+  shapeObject.set({
+    fill: shapeObject.frameOriginalFill || `${shapeObject.stroke || '#1e88e5'}55`,
+    frameOriginalFill: null,
+  })
+}
+
+function getOverlapArea(firstBounds, secondBounds) {
+  const left = Math.max(firstBounds.left, secondBounds.left)
+  const right = Math.min(
+    firstBounds.left + firstBounds.width,
+    secondBounds.left + secondBounds.width,
+  )
+  const top = Math.max(firstBounds.top, secondBounds.top)
+  const bottom = Math.min(
+    firstBounds.top + firstBounds.height,
+    secondBounds.top + secondBounds.height,
+  )
+
+  if (right <= left || bottom <= top) {
+    return 0
+  }
+
+  return (right - left) * (bottom - top)
 }
 
 export default useFabricCanvas

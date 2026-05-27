@@ -15,6 +15,7 @@ function EditorToolbar({
   onColorChange,
   onDeleteActiveObject,
   onFontSizeChange,
+  onReleaseActiveFrame,
 }) {
   return (
     <div className="toolbar" aria-label="Canvas tools">
@@ -42,7 +43,13 @@ function EditorToolbar({
           min="18"
           type="number"
           value={fontSize}
-          onChange={(event) => onFontSizeChange(Number(event.target.value))}
+          onChange={(event) => {
+            const nextFontSize = Number(event.target.value)
+
+            if (Number.isFinite(nextFontSize)) {
+              onFontSizeChange(nextFontSize)
+            }
+          }}
         />
       </label>
       <button type="button" onClick={onAddText}>
@@ -53,6 +60,9 @@ function EditorToolbar({
           {shape.label}
         </button>
       ))}
+      <button type="button" className="release-button" onClick={onReleaseActiveFrame}>
+        Release
+      </button>
       <button type="button" className="secondary-button" onClick={onDeleteActiveObject}>
         Delete
       </button>
