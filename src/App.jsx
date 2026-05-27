@@ -32,6 +32,7 @@ function App() {
     canvasElementRef,
     deleteActiveObject,
     downloadImage,
+    layers,
     loadImageToCanvas,
     moveActiveLayer,
     releaseActiveFrame,
@@ -259,6 +260,7 @@ function App() {
               captionText={captionText}
               color={color}
               fontSize={fontSize}
+              layers={layers}
               shapeStyle={shapeStyle}
               onAddShape={addShape}
               onAddText={addText}

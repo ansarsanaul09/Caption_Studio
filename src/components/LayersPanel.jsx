@@ -5,7 +5,10 @@ function LayersPanel({ layers }) {
 
   return (
     <aside className="layers-panel">
-      <h2>Layers</h2>
+      <div className="layers-panel-header">
+        <h2>Canvas Layers</h2>
+        <span>{layers.length}</span>
+      </div>
       <pre>{layerSummary}</pre>
     </aside>
   )

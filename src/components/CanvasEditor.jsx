@@ -1,4 +1,5 @@
 import EditorToolbar from './EditorToolbar'
+import LayersPanel from './LayersPanel'
 
 function CanvasEditor({
   canvasRef,
@@ -6,6 +7,7 @@ function CanvasEditor({
   captionText,
   color,
   fontSize,
+  layers,
   shapeStyle,
   onAddShape,
   onAddText,
@@ -36,8 +38,11 @@ function CanvasEditor({
         onShapeStyleChange={onShapeStyleChange}
       />
 
-      <div className="canvas-wrap">
-        <canvas ref={canvasRef} />
+      <div className="editor-body">
+        <div className="canvas-wrap">
+          <canvas ref={canvasRef} />
+        </div>
+        <LayersPanel layers={layers} />
       </div>
     </section>
   )

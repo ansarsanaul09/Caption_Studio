@@ -23,12 +23,12 @@ function EditorToolbar({
 }) {
   return (
     <div className="toolbar" aria-label="Canvas tools">
-      <input
+      {/* <input
         aria-label="Caption text"
         className="caption-input"
         value={captionText}
         onChange={(event) => onCaptionTextChange(event.target.value)}
-      />
+      /> */}
       <label className="color-control">
         <span>Text</span>
         <input

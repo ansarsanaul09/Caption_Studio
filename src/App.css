@@ -207,8 +207,17 @@ button:disabled {
   transform: translate(0, 8px);
 }
 
+.header-actions .tooltip-control::before {
+  top: calc(100% + 10px);
+  bottom: auto;
+}
+
 .header-actions .tooltip-control::after {
+  top: calc(100% + 4px);
+  bottom: auto;
   right: 28px;
+  border-color: transparent;
+  border-bottom-color: #101827;
 }
 
 .header-actions .tooltip-control:hover::before,
@@ -525,6 +534,13 @@ button:disabled {
   overflow: visible;
 }
 
+.editor-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  gap: 14px;
+  min-width: 0;
+}
+
 .toolbar {
   position: relative;
   z-index: 10;
@@ -647,13 +663,15 @@ button:disabled {
   display: grid;
   align-content: start;
   gap: 10px;
-  max-height: calc(100vh - 180px);
-  overflow: auto;
+  max-height: calc(100vh - 320px);
+  min-height: 360px;
+  overflow: hidden;
   border: 1px solid #d8dee9;
-  border-radius: 8px;
+  border-radius: 14px;
   padding: 14px;
   background: #ffffff;
   text-align: left;
+  box-shadow: 0 12px 28px rgba(23, 32, 51, 0.08);
 }
 
 .editor-status {
@@ -733,8 +751,17 @@ button:disabled {
   transform: translate(0, 8px);
 }
 
+.modal-close.tooltip-control::before {
+  top: calc(100% + 10px);
+  bottom: auto;
+}
+
 .modal-close.tooltip-control::after {
+  top: calc(100% + 4px);
+  bottom: auto;
   right: 16px;
+  border-color: transparent;
+  border-bottom-color: #101827;
 }
 
 .modal-close.tooltip-control:hover::before,
@@ -772,13 +799,34 @@ button:disabled {
   line-height: 1.55;
 }
 
+.layers-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .layers-panel h2 {
   margin: 0;
+}
+
+.layers-panel-header span {
+  display: inline-grid;
+  min-width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 999px;
+  color: #ffffff;
+  background: #1e88e5;
+  font-size: 13px;
+  font-weight: 900;
 }
 
 pre {
   overflow: auto;
   margin: 0;
+  max-height: calc(100vh - 390px);
+  min-height: 290px;
   padding: 12px;
   border-radius: 6px;
   color: #dbeafe;
@@ -812,9 +860,19 @@ pre {
     grid-template-columns: 1fr;
   }
 
+  .editor-body {
+    grid-template-columns: 1fr;
+  }
+
   .layers-panel {
     grid-column: 1 / -1;
     max-height: 320px;
+    min-height: 240px;
+  }
+
+  pre {
+    max-height: 240px;
+    min-height: 180px;
   }
 }
 
