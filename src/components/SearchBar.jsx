@@ -2,14 +2,27 @@ function SearchBar({ query, hasError, isSearching, onQueryChange, onSearch }) {
   return (
     <form className="search-form" onSubmit={onSearch}>
       <div>
-        <input
-          aria-invalid={hasError}
-          className={hasError ? 'input-error' : undefined}
-          id="image-query"
-          value={query}
-          onChange={(event) => onQueryChange(event.target.value)}
-          placeholder="Try nature, city, food..."
-        />
+        <div className="search-input-wrap">
+          <input
+            aria-invalid={hasError}
+            className={hasError ? 'input-error' : undefined}
+            id="image-query"
+            value={query}
+            onChange={(event) => onQueryChange(event.target.value)}
+            placeholder="Try nature, city, food..."
+          />
+          {query && (
+            <button
+              aria-label="Clear search text"
+              className="clear-search-button tooltip-control"
+              data-tooltip="Clear search text"
+              type="button"
+              onClick={() => onQueryChange('')}
+            >
+              X
+            </button>
+          )}
+        </div>
         <button
           aria-label={isSearching ? 'Searching images' : 'Search images'}
           className={

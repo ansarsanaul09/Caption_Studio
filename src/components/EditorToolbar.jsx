@@ -6,14 +6,12 @@ const shapeButtons = [
 ]
 
 function EditorToolbar({
-  captionText,
   canReleaseActiveFrame,
   color,
   fontSize,
   shapeStyle,
   onAddShape,
   onAddText,
-  onCaptionTextChange,
   onColorChange,
   onDeleteActiveObject,
   onFontSizeChange,
