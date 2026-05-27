@@ -458,6 +458,37 @@ button:disabled {
   text-transform: uppercase;
 }
 
+.shape-style-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  border: 1px solid #cfd8e6;
+  border-radius: 999px;
+  padding: 0 10px;
+  background: #f8fafc;
+}
+
+.shape-style-control span {
+  color: #465267;
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.shape-style-control select {
+  height: 38px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 12px;
+  color: #172033;
+  background: #ffffff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  outline: none;
+}
+
 .font-size-control {
   display: flex;
   align-items: center;

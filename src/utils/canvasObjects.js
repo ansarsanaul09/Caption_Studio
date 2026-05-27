@@ -1,5 +1,5 @@
 const shapeDefaults = {
-  fill: 'rgba(30, 136, 229, 0.34)',
+  fill: '#1e88e5',
   stroke: '#1e88e5',
   strokeWidth: 3,
   left: 140,
@@ -29,12 +29,20 @@ export function createCaption({ fabric, text, color, fontSize }) {
   })
 }
 
-export function createShape({ fabric, type, color }) {
+export function createShape({ fabric, type, shapeStyle }) {
+  const fill = createShapeFill({
+    fabric,
+    shapeStyle,
+    width: 190,
+    height: 150,
+  })
+  const stroke = getShapeStrokeColor(shapeStyle)
   const options = {
     ...shapeDefaults,
     kind: 'shape',
-    fill: `${color}55`,
-    stroke: color,
+    fill,
+    shapeStyle,
+    stroke,
   }
 
   const shapeMap = {
@@ -51,4 +59,33 @@ export function createShape({ fabric, type, color }) {
   }
 
   return createFabricShape()
+}
+
+export function createShapeFill({ color, fabric, height, shapeStyle, width }) {
+  if (shapeStyle?.mode !== 'gradient') {
+    return shapeStyle?.solid || color || shapeDefaults.fill
+  }
+
+  return new fabric.Gradient({
+    type: 'linear',
+    gradientUnits: 'pixels',
+    coords: {
+      x1: -width / 2,
+      y1: -height / 2,
+      x2: width / 2,
+      y2: height / 2,
+    },
+    colorStops: [
+      { offset: 0, color: shapeStyle.from },
+      { offset: 1, color: shapeStyle.to },
+    ],
+  })
+}
+
+export function getShapeStrokeColor(shapeStyle) {
+  if (shapeStyle?.mode === 'gradient') {
+    return shapeStyle.from || shapeDefaults.stroke
+  }
+
+  return shapeStyle?.solid || shapeDefaults.stroke
 }

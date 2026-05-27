@@ -6,6 +6,7 @@ function CanvasEditor({
   captionText,
   color,
   fontSize,
+  shapeStyle,
   onAddShape,
   onAddText,
   onCaptionTextChange,
@@ -14,6 +15,7 @@ function CanvasEditor({
   onFontSizeChange,
   onMoveActiveLayer,
   onReleaseActiveFrame,
+  onShapeStyleChange,
 }) {
   return (
     <section className="editor-panel">
@@ -22,6 +24,7 @@ function CanvasEditor({
         canReleaseActiveFrame={canReleaseActiveFrame}
         color={color}
         fontSize={fontSize}
+        shapeStyle={shapeStyle}
         onAddShape={onAddShape}
         onAddText={onAddText}
         onCaptionTextChange={onCaptionTextChange}
@@ -30,6 +33,7 @@ function CanvasEditor({
         onFontSizeChange={onFontSizeChange}
         onMoveActiveLayer={onMoveActiveLayer}
         onReleaseActiveFrame={onReleaseActiveFrame}
+        onShapeStyleChange={onShapeStyleChange}
       />
 
       <div className="canvas-wrap">

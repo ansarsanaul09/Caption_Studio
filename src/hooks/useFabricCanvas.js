@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { triggerUnsplashDownload } from '../services/unsplashApi'
 import { extractLayers } from '../utils/canvasLayers'
-import { createCaption, createShape } from '../utils/canvasObjects'
+import {
+  createCaption,
+  createShape,
+  createShapeFill,
+  getShapeStrokeColor,
+} from '../utils/canvasObjects'
 
 const CANVAS_WIDTH = 840
 const CANVAS_HEIGHT = 560
@@ -10,7 +15,14 @@ const TRANSPARENT_FRAME_FILL = 'rgba(0, 0, 0, 0)'
 const MIN_FRAME_OVERLAP_RATIO = 0.35
 let objectIdCounter = 0
 
-function useFabricCanvas({ captionText, color, fontSize, onSelectedImageChange, onStatusChange }) {
+function useFabricCanvas({
+  captionText,
+  color,
+  fontSize,
+  onSelectedImageChange,
+  onStatusChange,
+  shapeStyle,
+}) {
   const fabricCanvasRef = useRef(null)
   const pendingImageRef = useRef(null)
   const selectedImageRef = useRef(null)
@@ -197,7 +209,7 @@ function useFabricCanvas({ captionText, color, fontSize, onSelectedImageChange, 
     if (!canvas || !window.fabric) return
 
     try {
-      const shape = createShape({ fabric: window.fabric, type, color })
+      const shape = createShape({ fabric: window.fabric, type, shapeStyle })
       shape.set({ canvasObjectId: createCanvasObjectId() })
       canvas.add(shape)
       canvas.setActiveObject(shape)
@@ -210,6 +222,14 @@ function useFabricCanvas({ captionText, color, fontSize, onSelectedImageChange, 
   }
 
   function updateActiveObjectColor(nextColor) {
+    updateActiveTextColor(nextColor)
+  }
+
+  function updateActiveShapeStyle(nextShapeStyle) {
+    updateActiveShapeBackground(nextShapeStyle)
+  }
+
+  function updateActiveTextColor(nextColor) {
     const canvas = fabricCanvasRef.current
     const activeObjects = getActiveEditableObjects(canvas)
     if (!canvas || !activeObjects.length) return
@@ -218,15 +238,37 @@ function useFabricCanvas({ captionText, color, fontSize, onSelectedImageChange, 
       if (object.kind === 'text') {
         object.set({ fill: nextColor })
       }
+    })
 
-      if (object.kind === 'shape') {
-        const nextFill = `${nextColor}55`
-        object.set({
-          fill: object.frameImageId ? TRANSPARENT_FRAME_FILL : nextFill,
-          frameOriginalFill: object.frameImageId ? nextFill : object.frameOriginalFill,
-          stroke: nextColor,
-        })
+    canvas.requestRenderAll()
+    setLayers(extractLayers(canvas))
+    setCanReleaseActiveFrame(hasReleasableFrame(getActiveEditableObjects(canvas)))
+  }
+
+  function updateActiveShapeBackground(nextShapeStyle) {
+    const canvas = fabricCanvasRef.current
+    const activeObjects = getActiveEditableObjects(canvas)
+    if (!canvas || !activeObjects.length) return
+
+    activeObjects.forEach((object) => {
+      if (object.kind !== 'shape') {
+        return
       }
+
+      const nextFill = createShapeFill({
+        fabric: window.fabric,
+        height: object.getScaledHeight?.() ?? object.height ?? 150,
+        shapeStyle: nextShapeStyle,
+        width: object.getScaledWidth?.() ?? object.width ?? 190,
+      })
+      object.set({
+        fill: object.frameImageId ? TRANSPARENT_FRAME_FILL : nextFill,
+        shapeStyle: nextShapeStyle,
+        frameOriginalFill: object.frameImageId ? nextFill : object.frameOriginalFill,
+        stroke: getShapeStrokeColor(nextShapeStyle),
+      })
+      object.dirty = true
+      object.setCoords()
     })
 
     canvas.requestRenderAll()
@@ -372,6 +414,7 @@ function useFabricCanvas({ captionText, color, fontSize, onSelectedImageChange, 
     addText,
     addShape,
     updateActiveObjectColor,
+    updateActiveShapeStyle,
     updateActiveTextFontSize,
     updateActiveTextValue,
     deleteActiveObject,
@@ -585,7 +628,7 @@ function restoreShapeFill(shapeObject) {
   }
 
   shapeObject.set({
-    fill: shapeObject.frameOriginalFill || `${shapeObject.stroke || '#1e88e5'}55`,
+    fill: shapeObject.frameOriginalFill || shapeObject.stroke || '#1e88e5',
     frameOriginalFill: null,
   })
 }

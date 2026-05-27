@@ -18,6 +18,12 @@ function App() {
   const [captionText, setCaptionText] = useState('Double click to edit')
   const [color, setColor] = useState('#1e88e5')
   const [fontSize, setFontSize] = useState(42)
+  const [shapeStyle, setShapeStyle] = useState({
+    from: '#1e88e5',
+    mode: 'solid',
+    solid: '#1e88e5',
+    to: '#7c3aed',
+  })
   const {
     addShape,
     addText,
@@ -29,6 +35,7 @@ function App() {
     moveActiveLayer,
     releaseActiveFrame,
     updateActiveObjectColor,
+    updateActiveShapeStyle,
     updateActiveTextFontSize,
     updateActiveTextValue,
   } = useFabricCanvas({
@@ -36,6 +43,7 @@ function App() {
     color,
     fontSize,
     onStatusChange: setStatus,
+    shapeStyle,
   })
 
   async function runImageSearch(searchTerm, options = {}) {
@@ -90,6 +98,11 @@ function App() {
   function handleColorChange(value) {
     setColor(value)
     updateActiveObjectColor(value)
+  }
+
+  function handleShapeStyleChange(nextShapeStyle) {
+    setShapeStyle(nextShapeStyle)
+    updateActiveShapeStyle(nextShapeStyle)
   }
 
   function handleFontSizeChange(value) {
@@ -155,6 +168,7 @@ function App() {
               captionText={captionText}
               color={color}
               fontSize={fontSize}
+              shapeStyle={shapeStyle}
               onAddShape={addShape}
               onAddText={addText}
               onCaptionTextChange={handleCaptionTextChange}
@@ -163,6 +177,7 @@ function App() {
               onFontSizeChange={handleFontSizeChange}
               onMoveActiveLayer={moveActiveLayer}
               onReleaseActiveFrame={releaseActiveFrame}
+              onShapeStyleChange={handleShapeStyleChange}
             />
           </section>
         </>

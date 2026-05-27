@@ -10,6 +10,7 @@ function EditorToolbar({
   canReleaseActiveFrame,
   color,
   fontSize,
+  shapeStyle,
   onAddShape,
   onAddText,
   onCaptionTextChange,
@@ -18,6 +19,7 @@ function EditorToolbar({
   onFontSizeChange,
   onMoveActiveLayer,
   onReleaseActiveFrame,
+  onShapeStyleChange,
 }) {
   return (
     <div className="toolbar" aria-label="Canvas tools">
@@ -28,15 +30,73 @@ function EditorToolbar({
         onChange={(event) => onCaptionTextChange(event.target.value)}
       />
       <label className="color-control">
-        <span>Color</span>
+        <span>Text</span>
         <input
-          aria-label="Layer color"
+          aria-label="Text color"
           className="color-input"
           type="color"
           value={color}
           onChange={(event) => onColorChange(event.target.value)}
         />
       </label>
+      <div className="shape-style-control" aria-label="Shape background style">
+        <span>Background</span>
+        <select
+          aria-label="Shape background mode"
+          value={shapeStyle.mode}
+          onChange={(event) =>
+            onShapeStyleChange({
+              ...shapeStyle,
+              mode: event.target.value,
+            })
+          }
+        >
+          <option value="solid">Solid</option>
+          <option value="gradient">Gradient</option>
+        </select>
+        {shapeStyle.mode === 'solid' && (
+          <input
+            aria-label="Shape background color"
+            className="color-input"
+            type="color"
+            value={shapeStyle.solid || shapeStyle.from}
+            onChange={(event) =>
+              onShapeStyleChange({
+                ...shapeStyle,
+                solid: event.target.value,
+              })
+            }
+          />
+        )}
+        {shapeStyle.mode === 'gradient' && (
+          <>
+            <input
+              aria-label="Gradient start color"
+              className="color-input"
+              type="color"
+              value={shapeStyle.from}
+              onChange={(event) =>
+                onShapeStyleChange({
+                  ...shapeStyle,
+                  from: event.target.value,
+                })
+              }
+            />
+            <input
+              aria-label="Gradient end color"
+              className="color-input"
+              type="color"
+              value={shapeStyle.to}
+              onChange={(event) =>
+                onShapeStyleChange({
+                  ...shapeStyle,
+                  to: event.target.value,
+                })
+              }
+            />
+          </>
+        )}
+      </div>
       <label className="font-size-control">
         <span>Size</span>
         <input
@@ -64,16 +124,16 @@ function EditorToolbar({
       ))}
       <div className="layer-controls" aria-label="Layer order controls">
         <button title="Send to back" type="button" onClick={() => onMoveActiveLayer('back')}>
-          ⇣
+          B
         </button>
         <button title="Send backward" type="button" onClick={() => onMoveActiveLayer('backward')}>
-          ↓
+          -
         </button>
         <button title="Bring forward" type="button" onClick={() => onMoveActiveLayer('forward')}>
-          ↑
+          +
         </button>
         <button title="Bring to front" type="button" onClick={() => onMoveActiveLayer('front')}>
-          ⇡
+          F
         </button>
       </div>
       {canReleaseActiveFrame && (
