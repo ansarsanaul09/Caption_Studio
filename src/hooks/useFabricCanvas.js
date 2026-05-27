@@ -7,6 +7,7 @@ const CANVAS_WIDTH = 840
 const CANVAS_HEIGHT = 560
 const CANVAS_BACKGROUND = '#f8fafc'
 const TRANSPARENT_FRAME_FILL = 'rgba(0, 0, 0, 0)'
+const MIN_FRAME_OVERLAP_RATIO = 0.35
 let objectIdCounter = 0
 
 function useFabricCanvas({ captionText, color, fontSize, onSelectedImageChange, onStatusChange }) {
@@ -14,6 +15,7 @@ function useFabricCanvas({ captionText, color, fontSize, onSelectedImageChange, 
   const pendingImageRef = useRef(null)
   const selectedImageRef = useRef(null)
   const [canvasElement, setCanvasElement] = useState(null)
+  const [canReleaseActiveFrame, setCanReleaseActiveFrame] = useState(false)
   const [layers, setLayers] = useState([])
 
   const canvasElementRef = useCallback((element) => {
@@ -70,6 +72,7 @@ function useFabricCanvas({ captionText, color, fontSize, onSelectedImageChange, 
           canvas.setActiveObject(fabricImage)
           canvas.renderAll()
           setLayers(extractLayers(canvas))
+          setCanReleaseActiveFrame(false)
           onStatusChange('')
         },
         { crossOrigin: 'anonymous' },
@@ -99,33 +102,37 @@ function useFabricCanvas({ captionText, color, fontSize, onSelectedImageChange, 
     fabricCanvasRef.current = canvas
 
     const syncLayers = () => setLayers(extractLayers(canvas))
+    const syncSelectionState = () => {
+      setCanReleaseActiveFrame(hasReleasableFrame(getActiveEditableObjects(canvas)))
+      syncLayers()
+    }
     const bringActiveObjectForward = () => {
       const activeObject = canvas.getActiveObject()
 
       if (!activeObject) {
-        syncLayers()
+        syncSelectionState()
         return
       }
 
       activeObject.bringToFront()
       canvas.requestRenderAll()
-      syncLayers()
+      syncSelectionState()
     }
     const fitActiveImageIntoShape = () => {
       const activeObject = canvas.getActiveObject()
 
       if (activeObject?.type === 'activeSelection') {
-        syncFrameImagesForObjects(canvas, activeObject.getObjects(), syncLayers)
+        syncFrameImagesForObjects(canvas, activeObject.getObjects(), syncSelectionState)
         return
       }
 
       if (activeObject?.kind === 'shape') {
-        syncImageForShape(canvas, activeObject, syncLayers)
+        syncImageForShape(canvas, activeObject, syncSelectionState)
         return
       }
 
       if (activeObject?.kind !== 'image') {
-        syncLayers()
+        syncSelectionState()
         return
       }
 
@@ -134,43 +141,44 @@ function useFabricCanvas({ captionText, color, fontSize, onSelectedImageChange, 
       if (!targetShape) {
         releaseImageFromShape(canvas, activeObject)
         canvas.requestRenderAll()
-        syncLayers()
+        syncSelectionState()
         return
       }
 
-      fitImageIntoShape(activeObject, targetShape, canvas, syncLayers)
+      fitImageIntoShape(activeObject, targetShape, canvas, syncSelectionState)
     }
     const syncLinkedFrameOnTransform = (event) => {
       const targetObject = event.target
 
       if (!targetObject) {
-        syncLayers()
+        syncSelectionState()
         return
       }
 
       if (targetObject.type === 'activeSelection') {
-        syncFrameImagesForObjects(canvas, targetObject.getObjects(), syncLayers)
+        syncFrameImagesForObjects(canvas, targetObject.getObjects(), syncSelectionState)
         return
       }
 
       if (targetObject.kind === 'shape') {
-        syncImageForShape(canvas, targetObject, syncLayers)
+        syncImageForShape(canvas, targetObject, syncSelectionState)
         return
       }
 
-      syncLayers()
+      syncSelectionState()
     }
 
-    canvas.on('object:added', syncLayers)
+    canvas.on('object:added', syncSelectionState)
     canvas.on('object:modified', syncLinkedFrameOnTransform)
-    canvas.on('object:removed', syncLayers)
+    canvas.on('object:removed', syncSelectionState)
     canvas.on('object:moving', bringActiveObjectForward)
     canvas.on('object:scaling', syncLinkedFrameOnTransform)
     canvas.on('object:rotating', syncLinkedFrameOnTransform)
     canvas.on('mouse:up', fitActiveImageIntoShape)
     canvas.on('selection:created', bringActiveObjectForward)
     canvas.on('selection:updated', bringActiveObjectForward)
-    syncLayers()
+    canvas.on('selection:cleared', syncSelectionState)
+    syncSelectionState()
 
     if (pendingImageRef.current) {
       loadImageToCanvas(pendingImageRef.current)
@@ -193,6 +201,7 @@ function useFabricCanvas({ captionText, color, fontSize, onSelectedImageChange, 
     canvas.setActiveObject(textbox)
     canvas.renderAll()
     setLayers(extractLayers(canvas))
+    setCanReleaseActiveFrame(false)
   }
 
   function addShape(type) {
@@ -206,6 +215,7 @@ function useFabricCanvas({ captionText, color, fontSize, onSelectedImageChange, 
       canvas.setActiveObject(shape)
       canvas.renderAll()
       setLayers(extractLayers(canvas))
+      setCanReleaseActiveFrame(false)
     } catch (error) {
       onStatusChange(error.message || 'Unable to add this shape.')
     }
@@ -233,6 +243,7 @@ function useFabricCanvas({ captionText, color, fontSize, onSelectedImageChange, 
 
     canvas.requestRenderAll()
     setLayers(extractLayers(canvas))
+    setCanReleaseActiveFrame(hasReleasableFrame(getActiveEditableObjects(canvas)))
   }
 
   function updateActiveTextFontSize(nextFontSize) {
@@ -249,6 +260,7 @@ function useFabricCanvas({ captionText, color, fontSize, onSelectedImageChange, 
 
     canvas.requestRenderAll()
     setLayers(extractLayers(canvas))
+    setCanReleaseActiveFrame(hasReleasableFrame(getActiveEditableObjects(canvas)))
   }
 
   function updateActiveTextValue(nextText) {
@@ -265,6 +277,7 @@ function useFabricCanvas({ captionText, color, fontSize, onSelectedImageChange, 
 
     canvas.requestRenderAll()
     setLayers(extractLayers(canvas))
+    setCanReleaseActiveFrame(hasReleasableFrame(getActiveEditableObjects(canvas)))
   }
 
   function deleteActiveObject() {
@@ -280,6 +293,7 @@ function useFabricCanvas({ captionText, color, fontSize, onSelectedImageChange, 
     canvas.discardActiveObject()
     canvas.renderAll()
     setLayers(extractLayers(canvas))
+    setCanReleaseActiveFrame(false)
   }
 
   function releaseActiveFrame() {
@@ -299,6 +313,7 @@ function useFabricCanvas({ captionText, color, fontSize, onSelectedImageChange, 
 
     canvas.requestRenderAll()
     setLayers(extractLayers(canvas))
+    setCanReleaseActiveFrame(false)
   }
 
   function downloadImage() {
@@ -323,6 +338,7 @@ function useFabricCanvas({ captionText, color, fontSize, onSelectedImageChange, 
 
   return {
     canvasElementRef,
+    canReleaseActiveFrame,
     layers,
     loadImageToCanvas,
     addText,
@@ -359,8 +375,14 @@ function getActiveEditableObjects(canvas) {
   return [activeObject]
 }
 
+function hasReleasableFrame(objects) {
+  return objects.some((object) => object.frameShapeId || object.frameImageId)
+}
+
 function findBestOverlappingShape(canvas, imageObject) {
   const imageBounds = imageObject.getBoundingRect()
+  const imageCenter = imageObject.getCenterPoint()
+  const imageArea = imageBounds.width * imageBounds.height
 
   return canvas
     .getObjects()
@@ -369,8 +391,22 @@ function findBestOverlappingShape(canvas, imageObject) {
       shape,
       overlapArea: getOverlapArea(imageBounds, shape.getBoundingRect()),
     }))
-    .filter((item) => item.overlapArea > 0)
+    .filter(({ shape, overlapArea }) => {
+      const shapeBounds = shape.getBoundingRect()
+      const overlapRatio = overlapArea / Math.max(imageArea, 1)
+
+      return isPointInsideBounds(imageCenter, shapeBounds) && overlapRatio >= MIN_FRAME_OVERLAP_RATIO
+    })
     .sort((first, second) => second.overlapArea - first.overlapArea)[0]?.shape
+}
+
+function isPointInsideBounds(point, bounds) {
+  return (
+    point.x >= bounds.left &&
+    point.x <= bounds.left + bounds.width &&
+    point.y >= bounds.top &&
+    point.y <= bounds.top + bounds.height
+  )
 }
 
 function fitImageIntoShape(imageObject, shapeObject, canvas, onComplete) {

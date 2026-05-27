@@ -7,6 +7,7 @@ const shapeButtons = [
 
 function EditorToolbar({
   captionText,
+  canReleaseActiveFrame,
   color,
   fontSize,
   onAddShape,
@@ -60,9 +61,20 @@ function EditorToolbar({
           {shape.label}
         </button>
       ))}
-      <button type="button" className="release-button" onClick={onReleaseActiveFrame}>
-        Release
-      </button>
+      {canReleaseActiveFrame && (
+        <button
+          aria-label="Release image from shape"
+          title="Release image from shape"
+          type="button"
+          className="release-button"
+          onClick={onReleaseActiveFrame}
+        >
+          <span aria-hidden="true" className="release-icon">
+            /
+          </span>
+          Release
+        </button>
+      )}
       <button type="button" className="secondary-button" onClick={onDeleteActiveObject}>
         Delete
       </button>

@@ -21,6 +21,7 @@ function App() {
   const {
     addShape,
     addText,
+    canReleaseActiveFrame,
     canvasElementRef,
     deleteActiveObject,
     downloadImage,
@@ -149,6 +150,7 @@ function App() {
           <section className="editor-workspace">
             <CanvasEditor
               canvasRef={canvasElementRef}
+              canReleaseActiveFrame={canReleaseActiveFrame}
               captionText={captionText}
               color={color}
               fontSize={fontSize}

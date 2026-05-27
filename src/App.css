@@ -190,12 +190,27 @@ button:disabled {
 }
 
 .release-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   background: #0f766e;
 }
 
 .release-button:hover {
   background: #115e59;
   box-shadow: 0 12px 24px rgba(15, 118, 110, 0.26);
+}
+
+.release-icon {
+  display: inline-grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 999px;
+  color: #0f766e;
+  background: #ffffff;
+  font-weight: 900;
+  line-height: 1;
 }
 
 .ghost-button {

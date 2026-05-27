@@ -2,6 +2,7 @@ import EditorToolbar from './EditorToolbar'
 
 function CanvasEditor({
   canvasRef,
+  canReleaseActiveFrame,
   captionText,
   color,
   fontSize,
@@ -17,6 +18,7 @@ function CanvasEditor({
     <section className="editor-panel">
       <EditorToolbar
         captionText={captionText}
+        canReleaseActiveFrame={canReleaseActiveFrame}
         color={color}
         fontSize={fontSize}
         onAddShape={onAddShape}
