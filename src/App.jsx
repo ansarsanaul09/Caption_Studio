@@ -23,6 +23,7 @@ function App() {
   const [shapeStyle, setShapeStyle] = useState({
     from: '#1e88e5',
     mode: 'solid',
+    opacity: 1,
     solid: '#1e88e5',
     to: '#7c3aed',
   })
@@ -231,7 +232,7 @@ function App() {
                     <h3>Shape Tools</h3>
                     <p>
                       Use Rectangle, Circle, Triangle, or Polygon to add shapes. Background changes
-                      the fill color or gradient for the selected shape and for new shapes.
+                      the fill color, gradient, and opacity for selected shapes and new shapes.
                     </p>
                   </article>
                   <article>

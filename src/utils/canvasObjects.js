@@ -23,8 +23,6 @@ export function createCaption({ fabric, text, color, fontSize }) {
     fontSize,
     fontWeight: 700,
     fill: color,
-    stroke: '#ffffff',
-    strokeWidth: 1,
     shadow: '0 2px 8px rgba(15, 23, 42, 0.35)',
   })
 }
@@ -41,6 +39,7 @@ export function createShape({ fabric, type, shapeStyle }) {
     ...shapeDefaults,
     kind: 'shape',
     fill,
+    opacity: getShapeOpacity(shapeStyle),
     shapeStyle,
     stroke,
   }
@@ -88,4 +87,14 @@ export function getShapeStrokeColor(shapeStyle) {
   }
 
   return shapeStyle?.solid || shapeDefaults.stroke
+}
+
+export function getShapeOpacity(shapeStyle) {
+  const opacity = shapeStyle?.opacity
+
+  if (!Number.isFinite(opacity)) {
+    return 1
+  }
+
+  return Math.min(Math.max(opacity, 0), 1)
 }

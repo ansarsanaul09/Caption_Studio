@@ -5,6 +5,37 @@ const shapeButtons = [
   { label: 'Polygon', type: 'polygon' },
 ]
 
+function getOpacityPercent(shapeStyle) {
+  return Math.round((shapeStyle.opacity ?? 1) * 100)
+}
+
+function hexToRgba(color, opacity) {
+  const hex = color?.replace('#', '')
+  const fullHex = hex?.length === 3
+    ? hex.split('').map((character) => `${character}${character}`).join('')
+    : hex
+
+  if (!fullHex || fullHex.length !== 6) {
+    return color || '#1e88e5'
+  }
+
+  const red = Number.parseInt(fullHex.slice(0, 2), 16)
+  const green = Number.parseInt(fullHex.slice(2, 4), 16)
+  const blue = Number.parseInt(fullHex.slice(4, 6), 16)
+
+  return `rgba(${red}, ${green}, ${blue}, ${opacity})`
+}
+
+function getShapePreviewFill(shapeStyle) {
+  const opacity = shapeStyle.opacity ?? 1
+
+  if (shapeStyle.mode === 'gradient') {
+    return `linear-gradient(135deg, ${hexToRgba(shapeStyle.from, opacity)}, ${hexToRgba(shapeStyle.to, opacity)})`
+  }
+
+  return hexToRgba(shapeStyle.solid || shapeStyle.from, opacity)
+}
+
 function EditorToolbar({
   canReleaseActiveFrame,
   color,
@@ -19,6 +50,8 @@ function EditorToolbar({
   onReleaseActiveFrame,
   onShapeStyleChange,
 }) {
+  const opacityPercent = getOpacityPercent(shapeStyle)
+
   return (
     <div className="toolbar" aria-label="Canvas tools">
       {/* <input
@@ -94,6 +127,29 @@ function EditorToolbar({
             />
           </>
         )}
+        <span
+          aria-label={`Shape background preview, ${opacityPercent}% opacity`}
+          className="shape-preview"
+          role="img"
+          style={{ '--shape-preview-fill': getShapePreviewFill(shapeStyle) }}
+        />
+        <label className="opacity-control">
+          <span>Opacity</span>
+          <input
+            aria-label="Shape background opacity"
+            max="100"
+            min="0"
+            type="range"
+            value={opacityPercent}
+            onChange={(event) =>
+              onShapeStyleChange({
+                ...shapeStyle,
+                opacity: Number(event.target.value) / 100,
+              })
+            }
+          />
+          <output>{opacityPercent}%</output>
+        </label>
       </div>
       <label className="font-size-control">
         <span>Size</span>

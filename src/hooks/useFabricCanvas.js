@@ -5,6 +5,7 @@ import {
   createCaption,
   createShape,
   createShapeFill,
+  getShapeOpacity,
   getShapeStrokeColor,
 } from '../utils/canvasObjects'
 
@@ -263,6 +264,7 @@ function useFabricCanvas({
       })
       object.set({
         fill: object.frameImageId ? TRANSPARENT_FRAME_FILL : nextFill,
+        opacity: getShapeOpacity(nextShapeStyle),
         shapeStyle: nextShapeStyle,
         frameOriginalFill: object.frameImageId ? nextFill : object.frameOriginalFill,
         stroke: getShapeStrokeColor(nextShapeStyle),
@@ -513,6 +515,7 @@ function fitImageIntoShape(imageObject, shapeObject, canvas, onComplete) {
       absolutePositioned: true,
       evented: false,
       fill: '#000000',
+      opacity: 1,
       selectable: false,
       stroke: null,
     })

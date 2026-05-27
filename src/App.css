@@ -643,11 +643,11 @@ button:disabled {
 .shape-style-control {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   min-height: 38px;
   border: 1px solid #cfd8e6;
   border-radius: 999px;
-  padding: 0 7px 0 12px;
+  padding: 0 9px 0 12px;
   background: #f8fafc;
 }
 
@@ -669,6 +669,66 @@ button:disabled {
   font-size: 12px;
   font-weight: 800;
   outline: none;
+}
+
+.shape-preview {
+  position: relative;
+  display: inline-block;
+  width: 34px;
+  height: 24px;
+  overflow: hidden;
+  border: 1px solid #cfd8e6;
+  border-radius: 7px;
+  background:
+    linear-gradient(45deg, #d9e2ee 25%, transparent 25%),
+    linear-gradient(-45deg, #d9e2ee 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #d9e2ee 75%),
+    linear-gradient(-45deg, transparent 75%, #d9e2ee 75%);
+  background-color: #ffffff;
+  background-position:
+    0 0,
+    0 6px,
+    6px -6px,
+    -6px 0;
+  background-size: 12px 12px;
+}
+
+.shape-preview::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--shape-preview-fill);
+}
+
+.opacity-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #465267;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.opacity-control input {
+  width: 92px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.opacity-control input:focus {
+  box-shadow: none;
+}
+
+.opacity-control output {
+  min-width: 38px;
+  color: #172033;
+  font-size: 12px;
+  font-weight: 900;
+  text-align: right;
 }
 
 .font-size-control {
