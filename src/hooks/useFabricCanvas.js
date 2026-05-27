@@ -106,18 +106,6 @@ function useFabricCanvas({ captionText, color, fontSize, onSelectedImageChange, 
       setCanReleaseActiveFrame(hasReleasableFrame(getActiveEditableObjects(canvas)))
       syncLayers()
     }
-    const bringActiveObjectForward = () => {
-      const activeObject = canvas.getActiveObject()
-
-      if (!activeObject) {
-        syncSelectionState()
-        return
-      }
-
-      activeObject.bringToFront()
-      canvas.requestRenderAll()
-      syncSelectionState()
-    }
     const fitActiveImageIntoShape = () => {
       const activeObject = canvas.getActiveObject()
 
@@ -171,12 +159,12 @@ function useFabricCanvas({ captionText, color, fontSize, onSelectedImageChange, 
     canvas.on('object:added', syncSelectionState)
     canvas.on('object:modified', syncLinkedFrameOnTransform)
     canvas.on('object:removed', syncSelectionState)
-    canvas.on('object:moving', bringActiveObjectForward)
+    canvas.on('object:moving', syncSelectionState)
     canvas.on('object:scaling', syncLinkedFrameOnTransform)
     canvas.on('object:rotating', syncLinkedFrameOnTransform)
     canvas.on('mouse:up', fitActiveImageIntoShape)
-    canvas.on('selection:created', bringActiveObjectForward)
-    canvas.on('selection:updated', bringActiveObjectForward)
+    canvas.on('selection:created', syncSelectionState)
+    canvas.on('selection:updated', syncSelectionState)
     canvas.on('selection:cleared', syncSelectionState)
     syncSelectionState()
 
@@ -316,6 +304,46 @@ function useFabricCanvas({ captionText, color, fontSize, onSelectedImageChange, 
     setCanReleaseActiveFrame(false)
   }
 
+  function moveActiveLayer(direction) {
+    const canvas = fabricCanvasRef.current
+    const activeObjects = getActiveEditableObjects(canvas)
+    if (!canvas || !activeObjects.length) return
+
+    activeObjects.forEach((object) => {
+      if (direction === 'front') {
+        object.bringToFront()
+      }
+
+      if (direction === 'forward') {
+        object.bringForward()
+      }
+
+      if (direction === 'backward') {
+        object.sendBackwards()
+      }
+
+      if (direction === 'back') {
+        object.sendToBack()
+      }
+    })
+
+    activeObjects
+      .filter((object) => object.kind === 'shape' && object.frameImageId)
+      .forEach((shape) => {
+        const linkedImage = canvas
+          .getObjects()
+          .find((object) => object.canvasObjectId === shape.frameImageId)
+
+        if (linkedImage) {
+          linkedImage.moveTo(Math.max(canvas.getObjects().indexOf(shape) - 1, 0))
+        }
+      })
+
+    canvas.requestRenderAll()
+    setLayers(extractLayers(canvas))
+    setCanReleaseActiveFrame(hasReleasableFrame(getActiveEditableObjects(canvas)))
+  }
+
   function downloadImage() {
     const canvas = fabricCanvasRef.current
     if (!canvas || !selectedImageRef.current) {
@@ -348,6 +376,7 @@ function useFabricCanvas({ captionText, color, fontSize, onSelectedImageChange, 
     updateActiveTextValue,
     deleteActiveObject,
     releaseActiveFrame,
+    moveActiveLayer,
     downloadImage,
   }
 }

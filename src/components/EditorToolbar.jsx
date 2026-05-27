@@ -16,6 +16,7 @@ function EditorToolbar({
   onColorChange,
   onDeleteActiveObject,
   onFontSizeChange,
+  onMoveActiveLayer,
   onReleaseActiveFrame,
 }) {
   return (
@@ -61,6 +62,20 @@ function EditorToolbar({
           {shape.label}
         </button>
       ))}
+      <div className="layer-controls" aria-label="Layer order controls">
+        <button title="Send to back" type="button" onClick={() => onMoveActiveLayer('back')}>
+          ⇣
+        </button>
+        <button title="Send backward" type="button" onClick={() => onMoveActiveLayer('backward')}>
+          ↓
+        </button>
+        <button title="Bring forward" type="button" onClick={() => onMoveActiveLayer('forward')}>
+          ↑
+        </button>
+        <button title="Bring to front" type="button" onClick={() => onMoveActiveLayer('front')}>
+          ⇡
+        </button>
+      </div>
       {canReleaseActiveFrame && (
         <button
           aria-label="Release image from shape"

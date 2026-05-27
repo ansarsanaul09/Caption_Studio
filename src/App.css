@@ -201,6 +201,35 @@ button:disabled {
   box-shadow: 0 12px 24px rgba(15, 118, 110, 0.26);
 }
 
+.layer-controls {
+  display: inline-flex;
+  gap: 4px;
+  min-height: 52px;
+  align-items: center;
+  border: 1px solid #cfd8e6;
+  border-radius: 999px;
+  padding: 4px;
+  background: #f8fafc;
+}
+
+.layer-controls button {
+  display: inline-grid;
+  width: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  place-items: center;
+  padding: 0;
+  color: #172033;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.layer-controls button:hover {
+  color: #ffffff;
+  background: #1e88e5;
+  box-shadow: 0 8px 18px rgba(30, 136, 229, 0.22);
+}
+
 .release-icon {
   display: inline-grid;
   width: 22px;

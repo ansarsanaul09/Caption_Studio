@@ -12,6 +12,7 @@ function CanvasEditor({
   onColorChange,
   onDeleteActiveObject,
   onFontSizeChange,
+  onMoveActiveLayer,
   onReleaseActiveFrame,
 }) {
   return (
@@ -27,6 +28,7 @@ function CanvasEditor({
         onColorChange={onColorChange}
         onDeleteActiveObject={onDeleteActiveObject}
         onFontSizeChange={onFontSizeChange}
+        onMoveActiveLayer={onMoveActiveLayer}
         onReleaseActiveFrame={onReleaseActiveFrame}
       />
 

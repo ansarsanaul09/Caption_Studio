@@ -26,6 +26,7 @@ function App() {
     deleteActiveObject,
     downloadImage,
     loadImageToCanvas,
+    moveActiveLayer,
     releaseActiveFrame,
     updateActiveObjectColor,
     updateActiveTextFontSize,
@@ -160,6 +161,7 @@ function App() {
               onColorChange={handleColorChange}
               onDeleteActiveObject={deleteActiveObject}
               onFontSizeChange={handleFontSizeChange}
+              onMoveActiveLayer={moveActiveLayer}
               onReleaseActiveFrame={releaseActiveFrame}
             />
           </section>
