@@ -28,19 +28,20 @@ export function createCaption({ fabric, text, color, fontSize }) {
 }
 
 export function createShape({ fabric, type, shapeStyle }) {
+  const normalizedShapeStyle = normalizeShapeStyle(shapeStyle)
   const fill = createShapeFill({
     fabric,
-    shapeStyle,
+    shapeStyle: normalizedShapeStyle,
     width: 190,
     height: 150,
   })
-  const stroke = getShapeStrokeColor(shapeStyle)
+  const stroke = getShapeStrokeColor(normalizedShapeStyle)
   const options = {
     ...shapeDefaults,
     kind: 'shape',
     fill,
-    opacity: getShapeOpacity(shapeStyle),
-    shapeStyle,
+    opacity: getShapeOpacity(normalizedShapeStyle),
+    shapeStyle: normalizedShapeStyle,
     stroke,
   }
 
@@ -60,9 +61,21 @@ export function createShape({ fabric, type, shapeStyle }) {
   return createFabricShape()
 }
 
+export function normalizeShapeStyle(shapeStyle) {
+  return {
+    from: shapeStyle?.from || '#1e88e5',
+    mode: shapeStyle?.mode === 'gradient' ? 'gradient' : 'solid',
+    opacity: getShapeOpacity(shapeStyle),
+    solid: shapeStyle?.solid || shapeStyle?.from || '#1e88e5',
+    to: shapeStyle?.to || '#7c3aed',
+  }
+}
+
 export function createShapeFill({ color, fabric, height, shapeStyle, width }) {
-  if (shapeStyle?.mode !== 'gradient') {
-    return shapeStyle?.solid || color || shapeDefaults.fill
+  const normalizedShapeStyle = normalizeShapeStyle(shapeStyle)
+
+  if (normalizedShapeStyle.mode !== 'gradient') {
+    return normalizedShapeStyle.solid || color || shapeDefaults.fill
   }
 
   return new fabric.Gradient({
@@ -75,18 +88,20 @@ export function createShapeFill({ color, fabric, height, shapeStyle, width }) {
       y2: height / 2,
     },
     colorStops: [
-      { offset: 0, color: shapeStyle.from },
-      { offset: 1, color: shapeStyle.to },
+      { offset: 0, color: normalizedShapeStyle.from },
+      { offset: 1, color: normalizedShapeStyle.to },
     ],
   })
 }
 
 export function getShapeStrokeColor(shapeStyle) {
-  if (shapeStyle?.mode === 'gradient') {
-    return shapeStyle.from || shapeDefaults.stroke
+  const normalizedShapeStyle = normalizeShapeStyle(shapeStyle)
+
+  if (normalizedShapeStyle.mode === 'gradient') {
+    return normalizedShapeStyle.from || shapeDefaults.stroke
   }
 
-  return shapeStyle?.solid || shapeDefaults.stroke
+  return normalizedShapeStyle.solid || shapeDefaults.stroke
 }
 
 export function getShapeOpacity(shapeStyle) {

@@ -46,6 +46,7 @@ function App() {
     captionText,
     color,
     fontSize,
+    onShapeStyleSelect: setShapeStyle,
     onStatusChange: setStatus,
     shapeStyle,
   })

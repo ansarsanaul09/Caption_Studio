@@ -7,6 +7,7 @@ import {
   createShapeFill,
   getShapeOpacity,
   getShapeStrokeColor,
+  normalizeShapeStyle,
 } from '../utils/canvasObjects'
 
 const CANVAS_WIDTH = 840
@@ -21,10 +22,12 @@ function useFabricCanvas({
   color,
   fontSize,
   onSelectedImageChange,
+  onShapeStyleSelect,
   onStatusChange,
   shapeStyle,
 }) {
   const fabricCanvasRef = useRef(null)
+  const lastShapeSelectionRef = useRef([])
   const pendingImageRef = useRef(null)
   const selectedImageRef = useRef(null)
   const [canvasElement, setCanvasElement] = useState(null)
@@ -116,7 +119,10 @@ function useFabricCanvas({
 
     const syncLayers = () => setLayers(extractLayers(canvas))
     const syncSelectionState = () => {
-      setCanReleaseActiveFrame(hasReleasableFrame(getActiveEditableObjects(canvas)))
+      const activeObjects = getActiveEditableObjects(canvas)
+      rememberSelectedShapes(activeObjects, lastShapeSelectionRef)
+      setCanReleaseActiveFrame(hasReleasableFrame(activeObjects))
+      syncSelectedShapeStyle(activeObjects, onShapeStyleSelect)
       syncLayers()
     }
     const fitActiveImageIntoShape = () => {
@@ -190,7 +196,7 @@ function useFabricCanvas({
       canvas.dispose()
       fabricCanvasRef.current = null
     }
-  }, [canvasElement, loadImageToCanvas, onStatusChange])
+  }, [canvasElement, loadImageToCanvas, onShapeStyleSelect, onStatusChange])
 
   function addText() {
     const canvas = fabricCanvasRef.current
@@ -212,6 +218,7 @@ function useFabricCanvas({
     try {
       const shape = createShape({ fabric: window.fabric, type, shapeStyle })
       shape.set({ canvasObjectId: createCanvasObjectId() })
+      lastShapeSelectionRef.current = [shape.canvasObjectId]
       canvas.add(shape)
       canvas.setActiveObject(shape)
       canvas.renderAll()
@@ -248,26 +255,25 @@ function useFabricCanvas({
 
   function updateActiveShapeBackground(nextShapeStyle) {
     const canvas = fabricCanvasRef.current
-    const activeObjects = getActiveEditableObjects(canvas)
-    if (!canvas || !activeObjects.length) return
+    const targetShapes = getShapeStyleTargets(canvas, lastShapeSelectionRef)
+    if (!canvas || !targetShapes.length) return
+    const normalizedShapeStyle = normalizeShapeStyle(nextShapeStyle)
+    lastShapeSelectionRef.current = targetShapes.map((object) => object.canvasObjectId)
 
-    activeObjects.forEach((object) => {
-      if (object.kind !== 'shape') {
-        return
-      }
-
+    targetShapes.forEach((object) => {
       const nextFill = createShapeFill({
         fabric: window.fabric,
         height: object.getScaledHeight?.() ?? object.height ?? 150,
-        shapeStyle: nextShapeStyle,
+        shapeStyle: normalizedShapeStyle,
         width: object.getScaledWidth?.() ?? object.width ?? 190,
       })
+      object.set({ fill: null })
       object.set({
         fill: object.frameImageId ? TRANSPARENT_FRAME_FILL : nextFill,
-        opacity: getShapeOpacity(nextShapeStyle),
-        shapeStyle: nextShapeStyle,
+        opacity: getShapeOpacity(normalizedShapeStyle),
+        shapeStyle: normalizedShapeStyle,
         frameOriginalFill: object.frameImageId ? nextFill : object.frameOriginalFill,
-        stroke: getShapeStrokeColor(nextShapeStyle),
+        stroke: getShapeStrokeColor(normalizedShapeStyle),
       })
       object.dirty = true
       object.setCoords()
@@ -321,6 +327,9 @@ function useFabricCanvas({
       clearFrameLinkBeforeDelete(canvas, object)
       canvas.remove(object)
     })
+    lastShapeSelectionRef.current = lastShapeSelectionRef.current.filter((shapeId) =>
+      canvas.getObjects().some((object) => object.canvasObjectId === shapeId),
+    )
 
     canvas.discardActiveObject()
     canvas.renderAll()
@@ -451,6 +460,53 @@ function getActiveEditableObjects(canvas) {
 
 function hasReleasableFrame(objects) {
   return objects.some((object) => object.frameShapeId || object.frameImageId)
+}
+
+function rememberSelectedShapes(objects, lastShapeSelectionRef) {
+  const selectedShapeIds = objects
+    .filter((object) => object.kind === 'shape')
+    .map((object) => object.canvasObjectId)
+    .filter(Boolean)
+
+  if (selectedShapeIds.length) {
+    lastShapeSelectionRef.current = selectedShapeIds
+  }
+}
+
+function getShapeStyleTargets(canvas, lastShapeSelectionRef) {
+  if (!canvas) {
+    return []
+  }
+
+  const activeShapes = getActiveEditableObjects(canvas).filter((object) => object.kind === 'shape')
+
+  if (activeShapes.length) {
+    return activeShapes
+  }
+
+  return canvas
+    .getObjects()
+    .filter((object) => (
+      object.kind === 'shape' &&
+      lastShapeSelectionRef.current.includes(object.canvasObjectId)
+    ))
+}
+
+function syncSelectedShapeStyle(objects, onShapeStyleSelect) {
+  if (!onShapeStyleSelect) {
+    return
+  }
+
+  const selectedShape = objects.find((object) => object.kind === 'shape')
+
+  if (!selectedShape) {
+    return
+  }
+
+  onShapeStyleSelect(normalizeShapeStyle({
+    ...selectedShape.shapeStyle,
+    opacity: selectedShape.opacity,
+  }))
 }
 
 function findBestOverlappingShape(canvas, imageObject) {
