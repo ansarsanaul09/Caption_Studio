@@ -1,0 +1,36 @@
+import EditorToolbar from './EditorToolbar'
+
+function CanvasEditor({
+  canvasRef,
+  captionText,
+  color,
+  fontSize,
+  onAddShape,
+  onAddText,
+  onCaptionTextChange,
+  onColorChange,
+  onDeleteActiveObject,
+  onFontSizeChange,
+}) {
+  return (
+    <section className="editor-panel">
+      <EditorToolbar
+        captionText={captionText}
+        color={color}
+        fontSize={fontSize}
+        onAddShape={onAddShape}
+        onAddText={onAddText}
+        onCaptionTextChange={onCaptionTextChange}
+        onColorChange={onColorChange}
+        onDeleteActiveObject={onDeleteActiveObject}
+        onFontSizeChange={onFontSizeChange}
+      />
+
+      <div className="canvas-wrap">
+        <canvas ref={canvasRef} />
+      </div>
+    </section>
+  )
+}
+
+export default CanvasEditor
