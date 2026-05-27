@@ -8,7 +8,12 @@ function ImageCard({ image, onAddCaptions }) {
         <p>{image.user.name}</p>
       </div>
       <div className="image-action">
-        <button type="button" onClick={() => onAddCaptions(image)}>
+        <button
+          className="tooltip-control"
+          data-tooltip="Open this image in the caption editor"
+          type="button"
+          onClick={() => onAddCaptions(image)}
+        >
           Add Caption
         </button>
       </div>

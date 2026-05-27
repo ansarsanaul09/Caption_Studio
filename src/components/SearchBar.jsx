@@ -12,7 +12,12 @@ function SearchBar({ query, hasError, isSearching, onQueryChange, onSearch }) {
         />
         <button
           aria-label={isSearching ? 'Searching images' : 'Search images'}
-          className={isSearching ? 'search-button is-loading' : 'search-button'}
+          className={
+            isSearching
+              ? 'search-button is-loading tooltip-control'
+              : 'search-button tooltip-control'
+          }
+          data-tooltip="Search Unsplash for images using your typed keyword"
           type="submit"
           disabled={isSearching}
         >

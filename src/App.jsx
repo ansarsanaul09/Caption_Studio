@@ -10,6 +10,7 @@ const FALLBACK_SEARCH_QUERY = 'wallpaper'
 
 function App() {
   const [activePage, setActivePage] = useState('search')
+  const [isInstructionsOpen, setIsInstructionsOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [images, setImages] = useState([])
   const [status, setStatus] = useState('')
@@ -128,12 +129,31 @@ function App() {
         </div>
         {activePage === 'editor' && (
           <div className="header-actions">
-            <button className="header-button ghost-button" type="button" onClick={goToSearchPage}>
-              <span aria-hidden="true">←</span>
+            <button
+              className="header-button help-button tooltip-control"
+              data-tooltip="Open a quick guide for canvas tools, layers, frames, and download"
+              type="button"
+              onClick={() => setIsInstructionsOpen(true)}
+            >
+              <span aria-hidden="true">?</span>
+              Canvas Instruction
+            </button>
+            <button
+              className="header-button ghost-button tooltip-control"
+              data-tooltip="Return to image search without downloading"
+              type="button"
+              onClick={goToSearchPage}
+            >
+              <span aria-hidden="true">&lt;</span>
               Back to Search
             </button>
-            <button className="header-button download-button" type="button" onClick={downloadImage}>
-              <span aria-hidden="true">↓</span>
+            <button
+              className="header-button download-button tooltip-control"
+              data-tooltip="Download the current canvas as a PNG image"
+              type="button"
+              onClick={downloadImage}
+            >
+              <span aria-hidden="true">D</span>
               Download
             </button>
           </div>
@@ -160,6 +180,77 @@ function App() {
 
       {activePage === 'editor' && (
         <>
+          {isInstructionsOpen && (
+            <div className="modal-backdrop" role="presentation">
+              <section
+                aria-labelledby="canvas-instructions-title"
+                aria-modal="true"
+                className="instruction-modal"
+                role="dialog"
+              >
+                <div className="modal-header">
+                  <div>
+                    <p>Editor guide</p>
+                    <h2 id="canvas-instructions-title">Canvas Instruction</h2>
+                  </div>
+                  <button
+                    aria-label="Close canvas instruction"
+                    className="modal-close tooltip-control"
+                    data-tooltip="Close this instruction panel"
+                    type="button"
+                    onClick={() => setIsInstructionsOpen(false)}
+                  >
+                    X
+                  </button>
+                </div>
+
+                <div className="instruction-grid">
+                  <article>
+                    <h3>Canvas Basics</h3>
+                    <p>
+                      Select any image, text, or shape on the canvas to drag, resize, rotate, or
+                      edit it. Select multiple layers together to move or resize them as a group.
+                    </p>
+                  </article>
+                  <article>
+                    <h3>Text Tools</h3>
+                    <p>
+                      Use the text input to update selected text, the Text color picker to change
+                      text color, Size for font size, and Text to add a new editable caption.
+                    </p>
+                  </article>
+                  <article>
+                    <h3>Shape Tools</h3>
+                    <p>
+                      Add Rectangle, Circle, Triangle, or Polygon. Background controls apply solid
+                      or gradient fills to selected shapes and to new shapes.
+                    </p>
+                  </article>
+                  <article>
+                    <h3>Image Frames</h3>
+                    <p>
+                      Drag an image into the center of a shape to fit it inside that shape. Use
+                      Release when a framed image or its shape is selected to separate them again.
+                    </p>
+                  </article>
+                  <article>
+                    <h3>Layer Order</h3>
+                    <p>
+                      B sends selected layers to the back, - moves them one step backward, + moves
+                      them one step forward, and F brings them to the front.
+                    </p>
+                  </article>
+                  <article>
+                    <h3>Finish</h3>
+                    <p>
+                      Delete removes the selected layer or group. Download exports your finished
+                      canvas as a PNG file.
+                    </p>
+                  </article>
+                </div>
+              </section>
+            </div>
+          )}
           {status && <p className="editor-status status">{status}</p>}
           <section className="editor-workspace">
             <CanvasEditor

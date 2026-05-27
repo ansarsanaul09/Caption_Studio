@@ -114,34 +114,69 @@ function EditorToolbar({
           }}
         />
       </label>
-      <button type="button" onClick={onAddText}>
+      <button
+        className="tooltip-control"
+        data-tooltip="Add a new editable text layer to the canvas"
+        type="button"
+        onClick={onAddText}
+      >
         Text
       </button>
       {shapeButtons.map((shape) => (
-        <button key={shape.type} type="button" onClick={() => onAddShape(shape.type)}>
+        <button
+          className="tooltip-control"
+          data-tooltip={`Add a ${shape.label.toLowerCase()} shape layer`}
+          key={shape.type}
+          type="button"
+          onClick={() => onAddShape(shape.type)}
+        >
           {shape.label}
         </button>
       ))}
       <div className="layer-controls" aria-label="Layer order controls">
-        <button title="Send to back" type="button" onClick={() => onMoveActiveLayer('back')}>
+        <button
+          aria-label="Send selected layer to back"
+          className="tooltip-control"
+          data-tooltip="Send the selected layer behind all other layers"
+          type="button"
+          onClick={() => onMoveActiveLayer('back')}
+        >
           B
         </button>
-        <button title="Send backward" type="button" onClick={() => onMoveActiveLayer('backward')}>
+        <button
+          aria-label="Send selected layer backward"
+          className="tooltip-control"
+          data-tooltip="Move the selected layer one step backward"
+          type="button"
+          onClick={() => onMoveActiveLayer('backward')}
+        >
           -
         </button>
-        <button title="Bring forward" type="button" onClick={() => onMoveActiveLayer('forward')}>
+        <button
+          aria-label="Bring selected layer forward"
+          className="tooltip-control"
+          data-tooltip="Move the selected layer one step forward"
+          type="button"
+          onClick={() => onMoveActiveLayer('forward')}
+        >
           +
         </button>
-        <button title="Bring to front" type="button" onClick={() => onMoveActiveLayer('front')}>
+        <button
+          aria-label="Bring selected layer to front"
+          className="tooltip-control"
+          data-tooltip="Bring the selected layer above all other layers"
+          type="button"
+          onClick={() => onMoveActiveLayer('front')}
+        >
           F
         </button>
       </div>
       {canReleaseActiveFrame && (
         <button
           aria-label="Release image from shape"
-          title="Release image from shape"
           type="button"
-          className="release-button"
+          className="release-button tooltip-control"
+          data-tooltip="Separate the framed image from its shape"
           onClick={onReleaseActiveFrame}
         >
           <span aria-hidden="true" className="release-icon">
@@ -150,7 +185,12 @@ function EditorToolbar({
           Release
         </button>
       )}
-      <button type="button" className="secondary-button" onClick={onDeleteActiveObject}>
+      <button
+        type="button"
+        className="secondary-button tooltip-control"
+        data-tooltip="Delete the selected layer or selected group"
+        onClick={onDeleteActiveObject}
+      >
         Delete
       </button>
     </div>
